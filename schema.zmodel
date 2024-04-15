@@ -1,0 +1,37 @@
+datasource db {
+    provider = 'postgresql'
+    url = env("DATABASE_URL")
+}
+
+generator client {
+    provider = "prisma-client-js"
+}
+
+abstract model Base {
+    id String @id @default(cuid())
+    createdAt DateTime @default(now())
+    updatedAt DateTime @updatedAt
+    deletedAt DateTime?
+    @@deny('delete', deletedAt !=null)
+}
+
+/**
+ * User model
+ */
+model User extends Base {
+    email String @unique @email
+    phoneNumber String @unique
+    supabaseUserID String @unique
+    admin Admin? @omit
+    name String
+
+    @@allow('create', true)
+    @@allow('all', auth() == this)
+}
+
+model Admin {
+    userID String @id
+    user User @relation(fields: [userID], references: [id])
+
+    @@deny('all', true)
+}

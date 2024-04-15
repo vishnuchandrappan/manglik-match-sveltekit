@@ -1,0 +1,9 @@
+{
+	"appId": "com.now.app",
+	"appName": "NOW",
+	"webDir": "build-static",
+	"server": {
+		"androidScheme": "https",
+		"url": "https://mac.tailed1b7.ts.net:3000"
+	}
+}
