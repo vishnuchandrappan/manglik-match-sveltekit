@@ -12,3 +12,4 @@ build-static
 certs
 # Capacitor
 capacitor.config.json.timestamp-*
+schema.prisma

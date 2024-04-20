@@ -24,6 +24,7 @@ model User extends Base {
     supabaseUserID String @unique
     admin Admin? @omit
     name String
+    profile Profile?
 
     @@allow('create', true)
     @@allow('all', auth() == this)
@@ -34,4 +35,228 @@ model Admin {
     user User @relation(fields: [userID], references: [id])
 
     @@deny('all', true)
+}
+
+
+model Religion {
+    id String @default(cuid()) @id
+    name String
+    castes Caste[]
+
+    @@allow('all', auth() != null)
+}
+
+model Caste {
+    id String @default(cuid()) @id
+    name String
+    religionID String
+    religion Religion @relation(fields: [religionID], references: [id])
+    profiles Profile[]
+    preferenceCastes PreferenceCaste[]
+
+    @@allow('all', auth() != null)
+}
+
+model Language {
+    id Int @id
+    name String @unique
+    profile Profile[]
+    userLanguages UserLanguage[]
+    preferenceLanguages PreferenceLanguage[]
+    preferenceMotherTongue PreferenceMothertongue[]
+
+    @@allow('all', auth() != null)
+}
+
+model UserLanguage {
+    profileID String
+    profile Profile @relation(fields: [profileID], references: [userID])
+    languageID Int
+    language Language @relation(fields: [languageID], references: [id])
+
+    @@id([profileID, languageID])
+    @@allow('all', auth() == profile.user)
+}
+
+model Profile {
+    bio String?
+    caste Caste @relation(fields: [casteID], references: [id])
+    casteID String
+    childrenStatus ChildrenStatus @default(PREFER_NOT_TO_SAY)
+    dateOfBirth DateTime
+    diet Diet
+    drinking DrinkingStatus @default(PREFER_NOT_TO_SAY)
+    educationLevel EducationLevel
+    exerciseStatus ExerciseStatus @default(PREFER_NOT_TO_SAY)
+    familyPlan FamilyPlan @default(PREFER_NOT_TO_SAY)
+    fullname String
+    gender Gender
+    height Float
+    hometown Json
+    jobTitle String
+    languages UserLanguage[]
+    location Json
+    maritalStatus MaritalStatus @default(SINGLE)
+    motherTongue Language @relation(fields: [motherTongueID], references: [id])
+    motherTongueID Int
+    nakshathram String
+    pets String[] @default([])
+    politics PoliticalStatus @default(PREFER_NOT_TO_SAY)
+    preferences Preferences?
+    settleDown SettleDownStatus @default(UNDECIDED)
+    smoking SmokingStatus @default(PREFER_NOT_TO_SAY)
+    user User @relation(fields: [userID], references: [id])
+    userID String @id
+    vaccinationStatus VaccinationStatus @default(PREFER_NOT_TO_SAY)
+    work String
+
+    @@allow('read', auth() != null)
+    @@allow("create, read, update", auth() == user)
+    @@deny('update', future().userID != userID)
+}
+
+model Preferences {
+    ageFrom Int @default(0)
+    ageTo Int @default(0)
+    castes PreferenceCaste[]
+    childrenStatus ChildrenStatus[] @default([])
+    diet Diet[] @default([])
+    drinking DrinkingStatus[] @default([])
+    educationLevel EducationLevel[] @default([])
+    familyPlan FamilyPlan[] @default([])
+    gender Gender[] @default([])
+    heightFrom Float @default(0)
+    heightTo Float @default(0)
+    hometown Json?
+    languages PreferenceLanguage[]
+    location Json?
+    maritalStatus MaritalStatus[] @default([])
+    motherTongues PreferenceMothertongue[]
+    nakshathram String[] @default([])
+    pets String[] @default([])
+    politics PoliticalStatus[] @default([])
+    profile Profile @relation(fields: [profileID], references: [userID])
+    profileID String @id
+    smoking SmokingStatus[] @default([])
+    vaccinationStatus VaccinationStatus[] @default([])
+
+    @@allow("create, read, update", auth() == profile.user)
+    @@deny('update', future().profileID != profileID)
+}
+
+model PreferenceMothertongue {
+    mothertongueID Int
+    mothertongue Language @relation(fields: [mothertongueID], references: [id])
+    preferenceID String
+    preference Preferences @relation(fields: [preferenceID], references: [profileID])
+
+    @@id([mothertongueID, preferenceID])
+    @@allow('all', auth() == preference.profile.user)
+}
+
+model PreferenceLanguage {
+    languageID Int
+    language Language @relation(fields: [languageID], references: [id])
+    preferenceID String
+    preference Preferences @relation(fields: [preferenceID], references: [profileID])
+
+    @@id([languageID, preferenceID])
+    @@allow('all', auth() == preference.profile.user)
+}
+
+model PreferenceCaste {
+    casteID String
+    caste Caste @relation(fields: [casteID], references: [id])
+    preferenceID String
+    preference Preferences @relation(fields: [preferenceID], references: [profileID])
+
+    @@id([casteID, preferenceID])
+    @@allow('all', auth() == preference.profile.user)
+}
+
+enum Gender {
+    MALE
+    FEMALE
+}
+
+enum ExerciseStatus {
+    ACTIVE
+    SOMETIMES
+    ALMOST_NEVER
+    PREFER_NOT_TO_SAY
+}
+
+enum Diet {
+    NON_VEGETARIAN
+    VEGETARIAN
+    EGGETARIAN
+    GRAVITARIAN
+    VEGAN
+    PESCATARIAN
+}
+
+enum SettleDownStatus {
+    WITHIN_A_YEAR
+    WITHIN_2_YEARS
+    WITHIN_3_YEARS
+    UNDECIDED
+}
+
+enum DrinkingStatus {
+    YES
+    NO
+    SOMETIMES
+    PREFER_NOT_TO_SAY
+}
+
+enum SmokingStatus {
+    YES
+    NO
+    SOMETIMES
+    PREFER_NOT_TO_SAY
+}
+
+enum PoliticalStatus {
+    APOLITICAL
+    MODERATE
+    LEFT
+    RIGHT
+    COMMUNIST
+    SOCIALIST
+    PREFER_NOT_TO_SAY
+}
+
+enum EducationLevel {
+    SECONDARY
+    SENIOR_SECONDARY
+    GRADUATE
+    POST_GRADUATE
+    DOCTORAL
+}
+
+enum MaritalStatus {
+    SINGLE
+    WIDOWED
+    DIVORCED
+}
+
+enum VaccinationStatus {
+    VACCINATED
+    PARTIALLY
+    NOT_YET
+    PREFER_NOT_TO_SAY
+}
+
+enum ChildrenStatus {
+    DONT_HAVE
+    HAVE
+    PREFER_NOT_TO_SAY
+}
+
+enum FamilyPlan {
+    DONT_WANT
+    WANT
+    OPEN_TO_CHILDREN
+    NOT_SURE_YET
+    PREFER_NOT_TO_SAY
 }
